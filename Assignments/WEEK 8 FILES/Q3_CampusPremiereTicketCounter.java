@@ -4,17 +4,14 @@ import java.util.List;
 public class Q3_CampusPremiereTicketCounter {
 
     interface Seat {
-
         String getSeatNumber();
-
         double getPrice();
     }
 
     static class RegularSeat implements Seat {
-
         private String seatNumber;
 
-        public RegularSeat(String seatNumber) {
+        RegularSeat(String seatNumber) {
             this.seatNumber = seatNumber;
         }
 
@@ -28,10 +25,9 @@ public class Q3_CampusPremiereTicketCounter {
     }
 
     static class PremiumSeat implements Seat {
-
         private String seatNumber;
 
-        public PremiumSeat(String seatNumber) {
+        PremiumSeat(String seatNumber) {
             this.seatNumber = seatNumber;
         }
 
@@ -45,11 +41,14 @@ public class Q3_CampusPremiereTicketCounter {
     }
 
     static class ReclinerSeat implements Seat {
-
         private String seatNumber;
 
-        public ReclinerSeat(String seatNumber) {
+        ReclinerSeat(String seatNumber) {
             this.seatNumber = seatNumber;
+        }
+
+        public String getSeatNumber() {
+            return seatNumber;
         }
 
         public double getPrice() {
@@ -58,109 +57,89 @@ public class Q3_CampusPremiereTicketCounter {
     }
 
     static class Customer {
-
         private String name;
 
-        public Customer(String name) {
+        Customer(String name) {
             this.name = name;
         }
 
-        public String getName() {
+        String getName() {
             return name;
         }
     }
 
     static class Show {
-
         private String showTime;
+        private List<Seat> bookedSeats = new ArrayList<>();
 
-        private List<Seat> bookedSeats =
-                new ArrayList<>();
-
-        public Show(String showTime) {
+        Show(String showTime) {
             this.showTime = showTime;
         }
 
-        public boolean isAvailable(Seat seat) {
-
+        boolean isAvailable(Seat seat) {
             for (Seat booked : bookedSeats) {
-
-                if (booked.getSeatNumber()
-                        .equals(seat.getSeatNumber())) {
-
+                if (booked.getSeatNumber().equals(seat.getSeatNumber())) {
                     return false;
                 }
             }
-
             return true;
         }
 
-        public boolean bookSeat(Seat seat) {
-
-            if (!isAvailable(seat)) {
-                return false;
+        boolean bookSeat(Seat seat) {
+            if (isAvailable(seat)) {
+                bookedSeats.add(seat);
+                return true;
             }
 
-            bookedSeats.add(seat);
-            return true;
+            return false;
         }
 
-        public void releaseSeat(Seat seat) {
-            bookedSeats.remove(seat);
+        void releaseSeat(Seat seat) {
+            bookedSeats.removeIf(
+                s -> s.getSeatNumber().equals(seat.getSeatNumber())
+            );
         }
 
-        public String getShowTime() {
+        String getShowTime() {
             return showTime;
         }
     }
 
     static class Booking {
-
         private Customer customer;
         private Show show;
-        private List<Seat> seats =
-                new ArrayList<>();
-
+        private List<Seat> seats = new ArrayList<>();
         private boolean cancelled = false;
 
-        public Booking(
-                Customer customer,
-                Show show) {
-
+        Booking(Customer customer, Show show) {
             this.customer = customer;
             this.show = show;
         }
 
-        public boolean addSeat(Seat seat) {
+        boolean addSeat(Seat seat) {
+
+            if (cancelled) {
+                System.out.println("Booking is cancelled.");
+                return false;
+            }
 
             if (seats.size() >= 6) {
-
-                System.out.println(
-                    "Maximum 6 seats allowed per booking."
-                );
-
+                System.out.println("Maximum 6 seats allowed.");
                 return false;
             }
 
-            if (!show.isAvailable(seat)) {
-
+            if (!show.bookSeat(seat)) {
                 System.out.println(
-                    "Seat "
-                    + seat.getSeatNumber()
-                    + " is already booked for this show."
+                    "Seat " + seat.getSeatNumber() + " is already booked."
                 );
-
                 return false;
             }
 
-            show.bookSeat(seat);
             seats.add(seat);
-
             return true;
         }
 
-        public double getTotal() {
-
+        double getTotal() {
             double total = 0;
 
             for (Seat seat : seats) {
@@ -170,18 +149,17 @@ public class Q3_CampusPremiereTicketCounter {
             return total;
         }
 
-        public void cancel(boolean beforeShowStarts) {
+        void cancel(boolean beforeShowStarts) {
 
             if (!beforeShowStarts) {
-
                 System.out.println(
-                    "Cannot cancel: show has already started."
+                    "Cannot cancel after the show starts."
                 );
-
                 return;
             }
 
             if (cancelled) {
+                System.out.println("Booking is already cancelled.");
                 return;
             }
 
@@ -192,101 +170,50 @@ public class Q3_CampusPremiereTicketCounter {
             cancelled = true;
 
             System.out.println(
-                customer.getName()
-                + "'s booking cancelled."
+                customer.getName() + "'s booking cancelled."
             );
-
-            System.out.print("Seats ");
-
-            for (int i = 0; i < seats.size(); i++) {
-
-                System.out.print(
-                    seats.get(i).getSeatNumber()
-                );
-
-                if (i < seats.size() - 1) {
-                    System.out.print(", ");
-                }
-            }
-
-            System.out.println(" released.");
         }
     }
 
     public static void main(String[] args) {
 
-        Customer asha =
-                new Customer("Asha");
+        Show show = new Show("7 PM");
 
-        Customer ravi =
-                new Customer("Ravi");
+        Customer asha = new Customer("Asha");
+        Booking ashaBooking = new Booking(asha, show);
 
-        Customer neha =
-                new Customer("Neha");
+        ashaBooking.addSeat(new RegularSeat("A1"));
+        ashaBooking.addSeat(new RegularSeat("A2"));
+        ashaBooking.addSeat(new PremiumSeat("F5"));
 
-        Show show =
-                new Show("7 PM");
-
-        Booking ashaBooking =
-                new Booking(asha, show);
-
-        ashaBooking.addSeat(
-            new RegularSeat("A1")
-        );
-
-        ashaBooking.addSeat(
-            new RegularSeat("A2")
-        );
-
-        ashaBooking.addSeat(
-            new PremiumSeat("F5")
-        );
-
-        System.out.println(
-            "Booking confirmed for Asha: "
-            + "A1, A2, F5."
-        );
-
+        System.out.println("Asha's booking confirmed.");
         System.out.printf(
-            "Total: ₹%.2f%n",
+            "Asha Total: ₹%.2f%n",
             ashaBooking.getTotal()
         );
 
-        Booking raviBooking =
-                new Booking(ravi, show);
+        Customer ravi = new Customer("Ravi");
+        Booking raviBooking = new Booking(ravi, show);
 
-        raviBooking.addSeat(
-            new RegularSeat("A2")
-        );
+        raviBooking.addSeat(new RegularSeat("A2"));
+        raviBooking.addSeat(new ReclinerSeat("R1"));
 
-        raviBooking.addSeat(
-            new ReclinerSeat("R1")
-        );
-
-        System.out.println(
-            "Booking confirmed for Ravi: R1."
-        );
-
+        System.out.println("Ravi's booking confirmed for R1.");
         System.out.printf(
-            "Total: ₹%.2f%n",
+            "Ravi Total: ₹%.2f%n",
             raviBooking.getTotal()
         );
 
         ashaBooking.cancel(true);
 
-        Booking nehaBooking =
-                new Booking(neha, show);
+        Customer neha = new Customer("Neha");
+        Booking nehaBooking = new Booking(neha, show);
 
-        nehaBooking.addSeat(
-            new RegularSeat("A2")
-        );
+        nehaBooking.addSeat(new RegularSeat("A2"));
 
-        System.out.println(
-            "Booking confirmed for Neha: A2."
-        );
-
+        System.out.println("Neha's booking confirmed for A2.");
         System.out.printf(
-            "Total: ₹%.2f%n",
+            "Neha Total: ₹%.2f%n",
             nehaBooking.getTotal()
         );
     }
